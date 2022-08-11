@@ -10,28 +10,36 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import javax.sql.DataSource;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
 import com.zee.zee5app.dto.User;
 import com.zee.zee5app.exceptions.InvalidIdException;
 import com.zee.zee5app.exceptions.NoDataFoundException;
 import com.zee.zee5app.exceptions.UnableToGenerateIdException;
 import com.zee.zee5app.utils.DBUtils;
 
+@Repository
 public class UserRepoImpl implements UserRepo {
-	private UserRepoImpl() {
-
-	}
-
-	private static UserRepoImpl userRepoImpl;
-
-	public static UserRepoImpl getInstance() {
-		if (userRepoImpl == null) {
-			userRepoImpl = new UserRepoImpl();
-		}
-		return userRepoImpl;
-	}
+//	private UserRepoImpl() {
+//
+//	}
+//
+//	private static UserRepoImpl userRepoImpl;
+//
+//	public static UserRepoImpl getInstance() {
+//		if (userRepoImpl == null) {
+//			userRepoImpl = new UserRepoImpl();
+//		}
+//		return userRepoImpl;
+//	}
+	@Autowired
 	
-	private DBUtils dbUtils = DBUtils.getInstance();
-	
+	DataSource dataSource;
+	@Autowired
+	DBUtils dbUtils;
 	@Override
 	public User insertUser(User user) throws UnableToGenerateIdException {
 		// TODO Auto-generated method stub
@@ -41,10 +49,11 @@ public class UserRepoImpl implements UserRepo {
 				+ "(userid,firstname,lastname,email,doj,dob,active) "
 				+ "values(?,?,?,?,?,?,?)";
 		//connection object 
-		connection = dbUtils.getConnection();
+		
 		
 		//statement object (Prepared)
 		try {
+			connection = dataSource.getConnection();
 			preparedStatement = connection.prepareStatement(insertStatement);
 			preparedStatement.setString(1, dbUtils.userIdGenerator(user.getFirstName(), user.getLastName()));
 			preparedStatement.setString(2, user.getFirstName());
@@ -66,8 +75,6 @@ public class UserRepoImpl implements UserRepo {
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}finally {
-			dbUtils.closeConnection(connection);
 		}
 		//We should get the result based on that we will return the result;
 		
@@ -79,49 +86,57 @@ public class UserRepoImpl implements UserRepo {
 		// TODO Auto-generated method stub
 		Connection connection  = null;
 		PreparedStatement preparedStatement = null;
-		String query  = "select * from user_table where userid=?";
+		//String query  = "select * from user_table where userid=?";
+		//userid,firstname,lastname,email,doj,dob,active
+		String updateQuery = "UPDATE user_table SET firstname=?,lastname=?,email=?,doj=?,dob=?,active=? WHERE userid=?";
 		ResultSet resultSet = null;
 		//connection object 
-		connection = dbUtils.getConnection();
+		
 		try {
-			preparedStatement = connection.prepareStatement(query);
-			preparedStatement.setString(1, userId);
-			resultSet = preparedStatement.executeQuery();
-			if(resultSet.next()) {
-				//record exists
-				//Inside the resultSet
-//				//user object from resultSet data.
-//				User user1 = new User();
-//				user1.setUserId(userId);
-//				user1.setFirstName(user.getFirstName());
-//				user1.setLastName(user.getLastName());
-//				user1.setEmail(user.getEmail());
-//				user1.setDoj(user.getDoj());
-//				user1.setDob(user.getDob());
-//				user1.setActive(user.isActive());
-				//System.out.println(user);
-				try {
-					String result = deleteUserById(userId);
-				} catch (NoDataFoundException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				try {
-					insertUser(user);
-				} catch (UnableToGenerateIdException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				return "success"; 
+			connection = dataSource.getConnection();
+			preparedStatement = connection.prepareStatement(updateQuery);
+			preparedStatement.setString(1, user.getFirstName());
+			preparedStatement.setString(2, user.getLastName());
+			preparedStatement.setString(3, user.getEmail());
+			preparedStatement.setDate(4, Date.valueOf(user.getDoj()));
+			preparedStatement.setDate(5, Date.valueOf(user.getDob()));
+			preparedStatement.setBoolean(6, user.isActive());
+			preparedStatement.setString(7, userId);
+			//preparedStatement = connection.prepareStatement(query);
+			//preparedStatement.setString(1, userId);
+			//resultSet = preparedStatement.executeQuery();
+			int result = 0;
+			result = preparedStatement.executeUpdate();
+			if(result>0) {
+				System.out.println("Updated Successfully ! ");
+				return "Updated Successfully ";
 			}else {
-				return null;
+				throw new InvalidIdException("Id not found");
 			}
+//			if(resultSet.next()) {
+//				//record exists
+//				//Inside the resultSet
+//				//user object from resultSet data.
+//				try {
+//					String result1 = deleteUserById(userId);
+//				} catch (NoDataFoundException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}
+//				try {
+//					insertUser(user);
+//				} catch (UnableToGenerateIdException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}
+//				return "success"; 
+//			}else {
+//				return null;
+//			}
 			
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}finally {
-			dbUtils.closeConnection(connection);
 		}
 		return null;
 	}
@@ -132,8 +147,9 @@ public class UserRepoImpl implements UserRepo {
 		String deleteStatement = "delete from user_table where userid=?";
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
-		connection = dbUtils.getConnection();
+		
 		try {
+			connection = dataSource.getConnection();
 			preparedStatement = connection.prepareStatement(deleteStatement);
 			preparedStatement.setString(1, userId);
 			int result = preparedStatement.executeUpdate();
@@ -146,8 +162,6 @@ public class UserRepoImpl implements UserRepo {
 		}catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}finally {
-			dbUtils.closeConnection(connection);
 		}
 		//We should get the result based on that we will return the result;
 		
@@ -163,8 +177,9 @@ public class UserRepoImpl implements UserRepo {
 		ResultSet resultSet = null;
 		List<User> users = new ArrayList<>();
 		//connection object 
-		connection = dbUtils.getConnection();
+		
 		try {
+			connection = dataSource.getConnection();
 			preparedStatement = connection.prepareStatement(query);
 			//preparedStatement.setString(1, userId);
 			resultSet = preparedStatement.executeQuery();
@@ -194,8 +209,6 @@ public class UserRepoImpl implements UserRepo {
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}finally {
-			dbUtils.closeConnection(connection);
 		}
 		return null;
 	}
@@ -208,8 +221,9 @@ public class UserRepoImpl implements UserRepo {
 		String query  = "select * from user_table where userid=?";
 		ResultSet resultSet = null;
 		//connection object 
-		connection = dbUtils.getConnection();
+		
 		try {
+			connection = dataSource.getConnection();
 			preparedStatement = connection.prepareStatement(query);
 			preparedStatement.setString(1, userId);
 			resultSet = preparedStatement.executeQuery();
@@ -234,8 +248,6 @@ public class UserRepoImpl implements UserRepo {
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}finally {
-			dbUtils.closeConnection(connection);
 		}
 		return null;
 	}

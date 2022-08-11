@@ -81,7 +81,7 @@ public class Movie {
 			String[] languages, float movieLength,String trailer1) throws InvalidIdException, InvalidNameException {
 		super();
 		this.setMovieId(movieId);
-		this.actors = actors;
+		this.setActors(actors);
 		this.setMovieName(movieName);
 		this.director = director;
 		this.genre = genre;

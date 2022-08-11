@@ -11,45 +11,30 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 
-import com.zee.zee5app.dto.Movie;
+import com.zee.zee5app.dto.WebSeries;
 import com.zee.zee5app.enums.Genres;
+import com.zee.zee5app.exceptions.InvalidIdException;
 import com.zee.zee5app.exceptions.NoDataFoundException;
 import com.zee.zee5app.repo.MovieRepository;
-import com.zee.zee5app.repo.MovieRepositoryImpl;
-import com.zee.zee5app.repo.UserRepo;
-import com.zee.zee5app.repo.UserRepoImpl;
-
+import com.zee.zee5app.repo.WebSeriesRepo;
 @Service
-public class MovieServiceImpl implements MovieService {
-	
+public class WebSeriesServiceImpl implements WebSeriesService {
+
 	@Autowired
-//	private MovieServiceImpl() {
-//
-//    }
-//
-//    private static MovieService movieService;
-//
-//    public static MovieService getInstance () {
-//        if(movieService == null) {
-//            movieService = new MovieServiceImpl();
-//        }
-//        return movieService;
-//    }
-
-
-    private MovieRepository repo;
+	private WebSeriesRepo repo;
 	@Override
-	public Movie insertMovie(Movie movie)  {
+	public WebSeries insertSeries(WebSeries webSeries) {
 		// TODO Auto-generated method stub
-		File file = new File(movie.getTrailer1());
+		File file = new File(webSeries.getTrailer1());
 		System.out.println(file.getName());
 		BufferedInputStream bufferedInputStream = null;
 		BufferedOutputStream bufferedOutputStream = null;
 		try {
-			if(movie.getTrailer1()==null||
-					movie.getTrailer1()==""||
+			if(webSeries.getTrailer1()==null||
+					webSeries.getTrailer1()==""||
 					!file.exists()) {
 				throw new FileNotFoundException("file does not exist");
 			}else {
@@ -73,51 +58,44 @@ public class MovieServiceImpl implements MovieService {
 				e.printStackTrace();
 			}
 		}
-		//trailer file exist or not 
-		//shift that file to zee5app/trailer folder
-		//then take the path and store it in db. --> halndled by Repo.
-		return repo.insertMovie(movie);
+		return repo.insertSeries(webSeries);
 	}
 
-	
-	
 	@Override
-	public Movie updateMovie(String movieId, Movie movie) {
+	public String updateMovie(String webSeriesId, WebSeries webSereis) throws InvalidIdException {
 		// TODO Auto-generated method stub
-		return repo.updateMovie(movieId, movie);
+		return repo.updateMovie(webSeriesId, webSereis);
+		
 	}
 
 	@Override
-	public Optional<Movie> getMovieByMovieId(String movieId) {
+	public Optional<WebSeries> getSereisByWebSeriesId(String webSeriesId) {
 		// TODO Auto-generated method stub
-		return repo.getMovieByMovieId(movieId);
+		return repo.getSereisByWebSeriesId(webSeriesId);
 	}
 
 	@Override
-	public Optional<List<Movie>> getAllMovies() {
+	public Optional<List<WebSeries>> getAllSereis() {
 		// TODO Auto-generated method stub
-		return repo.getAllMovies();
+		return repo.getAllSereis();
 	}
 
 	@Override
-	public List<Movie> getAllMoviesByGenre(Genres genre) {
+	public List<WebSeries> getAllSeriesByGenre(Genres genre) {
 		// TODO Auto-generated method stub
-		return repo.getAllMoviesByGenre(genre);
+		return repo.getAllSeriesByGenre(genre);
 	}
 
 	@Override
-	public Movie[] getAllMoviesByName(String movieName) {
+	public WebSeries[] getAllSeriesByName(String webSeriesName) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public String deleteMovieByMovieId(String movieId) throws NoDataFoundException {
+	public String deleteSeriesBySeriesId(String webSeriesId) throws NoDataFoundException {
 		// TODO Auto-generated method stub
-		return repo.deleteMovieByMovieId(movieId);
-	}
-	public List<Movie> findByOrderByMovieNameDsc(){
-		return repo.findByOrderByMovieNameDsc();
+		return repo.deleteSeriesBySeriesId(webSeriesId);
 	}
 
 }

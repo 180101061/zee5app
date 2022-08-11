@@ -17,16 +17,16 @@ import lombok.ToString;
 //@NoArgsConstructor
 
 public class User {//implements Comparable<User> {
-	static {
-		System.out.println("static block");
-	}
-	{
-		System.out.println("initialization block");
-	}
+//	static {
+//		System.out.println("static block");
+//	}
+//	{
+//		System.out.println("initialization block");
+//	}
 	public User() {
-		System.out.println("hello from EDC");
+		//System.out.println("hello from EDC");
 	}
-	
+//	
 	public User(String firstName, String lastName, String email) {
 		//super();
 		this.firstName = firstName;

@@ -11,8 +11,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import com.zee.zee5app.exceptions.UnableToGenerateIdException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+import com.zee.zee5app.exceptions.UnableToGenerateIdException;
+@Component
 public class DBUtils {
 //	public static void main(String[] args) {
 //		dbUtils = dbUtils = DBUtils.getInstance();
@@ -21,19 +24,19 @@ public class DBUtils {
 //	}
 
 	// TODO Auto-generated constructor stub
-	private DBUtils() {
-
-	}
-
-	private static DBUtils dbUtils;
-
-	public static DBUtils getInstance() {
-		if (dbUtils == null) {
-			dbUtils = new DBUtils();
-		}
-		return dbUtils;
-	}
-
+//	private DBUtils() {
+//
+//	}
+//
+//	private static DBUtils dbUtils;
+//
+//	public static DBUtils getInstance() {
+//		if (dbUtils == null) {
+//			dbUtils = new DBUtils();
+//		}
+//		return dbUtils;
+//	}
+	//@Autowired
 	public  Connection getConnection() {
 		//to provide the connection 
 		Properties properties = loadProperties();
@@ -102,8 +105,13 @@ public class DBUtils {
 			resultSet = preparedStatement.executeQuery();
 			if(resultSet.next()) {
 				id = resultSet.getInt(1);
+				
 				id = ++id;
-				newId = firstName.charAt(0)+""+lastName.charAt(0)+""+String.valueOf(id);
+				String id_extract = Integer.toString(id);
+				while(id_extract.length()!=8) {
+					id_extract = "0"+id_extract;
+				}
+				newId = firstName.charAt(0)+""+lastName.charAt(0)+""+id_extract;
 				//newId = firstName.charAt(0)+lastName.charAt(0)+""+id;
 				System.out.println(newId);
 				//then increment the number(id which is retrieved from db)
@@ -126,20 +134,40 @@ public class DBUtils {
 			this.closeConnection(connection);
 		}
 		return null;
-		
-		
-		//then cancate and return
 
 	}
-	public static void main(String[] args) {
-
-		String result="";
+	public String webSeriesIdGenerator(String webSeriesName) throws UnableToGenerateIdException {
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+		ResultSet resultSet = null;
+		int id =0;
+		String query = "SELECT seriesid from webseriesidgenerator";
+		String updateIdStatement = "update webseriesidgenerator set id=?";
+		String newId = null;
+		int updateResult = 0;
+		connection  = this.getConnection();
 		try {
-			result = DBUtils.getInstance().userIdGenerator("Rahul", "Kumar");
-		} catch (UnableToGenerateIdException e) {
+			preparedStatement = connection.prepareStatement(query);
+			resultSet = preparedStatement.executeQuery();
+			if(resultSet.next()) {
+				id = resultSet.getInt(1);
+				id = ++id;
+				newId = webSeriesName.charAt(0)+""+webSeriesName.charAt(1)+""+id;
+				System.out.println(newId);
+				preparedStatement = connection.prepareStatement(updateIdStatement);
+				preparedStatement.setInt(1, id);
+				updateResult = preparedStatement.executeUpdate();
+				if(updateResult==0) {
+					throw new UnableToGenerateIdException("unable to generate id");
+				}
+				return newId;
+			}
+			
+		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		System.out.println(result);
+		return null;
 	}
+	
 }
